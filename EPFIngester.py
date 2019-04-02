@@ -242,9 +242,10 @@ class Ingester(object):
         """
         if self.dbType == "postgresql":
             conn = psycopg2.connect(
-                host=self.dbHost,
+                # host=self.dbHost,
                 user=self.dbUser,
-                password=self.dbPassword,
+                # password=self.dbPassword,
+                options='-c search_path=itunes',
                 database=self.dbName)
         else:
             conn = MySQLdb.connect(
@@ -318,7 +319,10 @@ class Ingester(object):
         lst = [" ".join(aPair) for aPair in colPairs] #list comprehension
         paramStr = ",".join(lst)
         #paramString now looks like "export_date BIGINT, storefront_id INT, country_code VARCHAR(100)" etc.
-        exStr = """CREATE TABLE %s (%s)""" % (tableName, paramStr)
+        if self.isPostgresql:
+            exStr = """CREATE TABLE itunes.%s (%s)""" % (tableName, paramStr)
+        else:
+            exStr = """CREATE TABLE %s (%s)""" % (tableName, paramStr)
         cur.execute(exStr) #create the table in the database
         #set the primary key
         if self.isPostgresql:
